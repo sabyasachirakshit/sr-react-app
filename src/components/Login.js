@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate, Link } from "react-router-dom";
+import { Spin,message } from "antd"; // Import Ant Design spinner
 
 const Container = styled.div`
   display: flex;
@@ -50,6 +51,9 @@ const Button = styled.button`
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   &:hover {
     background-color: #0056b3;
   }
@@ -76,35 +80,40 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    const msg = message.loading("Trying to login..",0);
     const userData = {
       username,
       password,
     };
 
     try {
-      const response = await fetch("https://sr-express.onrender.com/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(userData),
-      });
+      const response = await fetch(
+        "https://sr-express.onrender.com/api/auth/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(userData),
+        }
+      );
 
       const data = await response.json();
 
       if (response.ok) {
-        console.log("Logged in successfully", data);
+        message.success(`Login Successful! Welcome ${userData.username}`,3)
         localStorage.setItem("token", data.token); // Store the token
         navigate("/dashboard"); // Redirect to dashboard
       } else {
         console.log("Login failed", data);
-        window.alert(data.msg);
+        message.error(data.msg,3);
         // Handle login failure (e.g., display error message)
       }
     } catch (err) {
       console.error("Error:", err);
       // Handle error (e.g., display error message)
+    } finally {
+      msg(); // Set loading state to false when the request ends
     }
   };
 
@@ -135,7 +144,9 @@ const Login = () => {
             {passwordVisible ? "🙈" : "👁️"}
           </ToggleButton>
         </InputContainer>
-        <Button type="submit">Login</Button>
+        <Button>
+          Login
+        </Button>
         <p>
           New here? <Link to="/register">register yourself</Link>
         </p>
