@@ -178,7 +178,7 @@ const Register = () => {
   return (
     <Container>
       <Form onSubmit={handleSubmit}>
-        <h2>Register</h2>
+        <h2>Register Here</h2>
         <Input
           type="text"
           placeholder="Username"
