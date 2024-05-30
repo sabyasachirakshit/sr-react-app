@@ -1,15 +1,12 @@
 // src/App.js
-import React from 'react';
-import {
-  createBrowserRouter,
-  RouterProvider,
-} from "react-router-dom";
-import Login from './components/Login';
-import Register from './components/Register';
-import Dashboard from './components/DashBoard';
-import Logout from './components/Logout';
-import ForgotPassword from './components/ForgetPassword';
-
+import React from "react";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import Login from "./components/Login";
+import Register from "./components/Register";
+import Dashboard from "./components/DashBoard";
+import Logout from "./components/Logout";
+import ForgotPassword from "./components/ForgetPassword";
+import NotFound from "./components/NotFound";
 
 const router = createBrowserRouter([
   {
@@ -29,19 +26,21 @@ const router = createBrowserRouter([
     element: <Register />,
   },
   {
-    path:"/logout",
-    element:<Logout />
+    path: "/logout",
+    element: <Logout />,
   },
   {
-    path:"/forgetpass",
-    element:<ForgotPassword />
-  }
+    path: "/forgetpass",
+    element: <ForgotPassword />,
+  },
+  {
+    path: "*",
+    element: <NotFound />,
+  },
 ]);
 
 const App = () => {
-  return (
-    <RouterProvider router={router} />
-  );
+  return <RouterProvider router={router} />;
 };
 
 export default App;
