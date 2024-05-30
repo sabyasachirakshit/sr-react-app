@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { Navigate, Link } from "react-router-dom";
 import { Modal, Button, message } from "antd";
+import Todo from "./ToDo";
 
 const Container = styled.div`
   padding: 20px;
@@ -20,16 +21,13 @@ const Dashboard = () => {
         return;
       }
       try {
-        const response = await fetch(
-          "https://sr-express.onrender.com/api/user/data",
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await fetch("https://sr-express.onrender.com/api/user/data", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         const data = await response.json();
 
@@ -57,16 +55,13 @@ const Dashboard = () => {
       return;
     }
     try {
-      const response = await fetch(
-        "https://sr-express.onrender.com/api/user/delete",
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch("https://sr-express.onrender.com/api/user/delete", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (response.ok) {
         localStorage.removeItem("token");
@@ -77,7 +72,7 @@ const Dashboard = () => {
       }
     } catch (err) {
       console.error("Error:", err);
-      message.error("Error deleting account. Please try again", 3);
+      message.error("Error deleting account. Please try again",3);
     } finally {
       msg();
     }
@@ -113,6 +108,7 @@ const Dashboard = () => {
       <Link to="/logout">
         <button>Logout</button>
       </Link>
+      
       <Button type="danger" onClick={showModal}>
         Delete Account
       </Button>
@@ -129,6 +125,7 @@ const Dashboard = () => {
           undone.
         </p>
       </Modal>
+      <Todo />
     </Container>
   );
 };
