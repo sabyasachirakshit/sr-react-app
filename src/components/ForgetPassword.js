@@ -161,6 +161,12 @@ const ForgotPassword = () => {
               placeholder="Username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault(); // Prevent form submission
+                  handleFetchSecurityQuestion(); // Call the fetch security question function
+                }
+              }}
             />
             <Button type="button" onClick={handleFetchSecurityQuestion}>
               Next
