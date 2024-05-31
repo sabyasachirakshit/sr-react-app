@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { Navigate, Link } from "react-router-dom";
 import { Modal, Button, message } from "antd";
 import Todo from "./ToDo";
+import Chat from "./Chat";
 
 const Container = styled.div`
   padding: 20px;
@@ -126,6 +127,7 @@ const Dashboard = () => {
         </p>
       </Modal>
       <Todo />
+      <Chat user={userData} />
     </Container>
   );
 };
