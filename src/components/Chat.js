@@ -311,7 +311,7 @@ const Chat = ({ user }) => {
       try {
         const token = localStorage.getItem("token");
         const response = await fetch(
-          "https://sr-express.onrender.com//api/user/chat/users",
+          "https://sr-express.onrender.com/api/user/chat/users",
           {
             method: "GET",
             headers: {
