@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Input, Button, List, Select } from "antd";
 import io from "socket.io-client";
 
 const { Option } = Select;
-const socket = io("https://sr-express.onrender.com/");
 
 const Chat = ({ user }) => {
   const [users, setUsers] = useState([]);
@@ -11,9 +10,15 @@ const Chat = ({ user }) => {
   const [messages, setMessages] = useState([]);
   const [receiverId, setReceiverId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const socketRef = useRef(null); // Use useRef for the socket connection
 
   useEffect(() => {
-    socket.emit("register", user._id);
+    // Initialize socket connection only once
+    if (!socketRef.current) {
+      socketRef.current = io("https://sr-express.onrender.com/");
+    }
+
+    socketRef.current.emit("register", user._id);
 
     const fetchUsers = async () => {
       try {
@@ -36,10 +41,17 @@ const Chat = ({ user }) => {
     };
 
     fetchUsers();
+
+    return () => {
+      // Clean up socket connection and event listeners on unmount
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+    };
   }, [user._id]);
 
   const fetchMessages = async (participantId) => {
-    console.log(participantId);
     try {
       setIsLoading(true);
       const token = localStorage.getItem("token");
@@ -50,16 +62,14 @@ const Chat = ({ user }) => {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
-          }
+          },
         }
       );
       const data = await response.json();
-      // Assuming data is an array and the first object contains the messages
       if (Array.isArray(data) && data.length > 0 && data[0].messages) {
-        console.log("These are messages:", data[0].messages);
         setMessages(data[0].messages);
       } else {
-        setMessages([]); // If no messages, clear the list
+        setMessages([]);
       }
     } catch (error) {
       console.error("Error fetching messages:", error);
@@ -75,23 +85,29 @@ const Chat = ({ user }) => {
   }, [receiverId]);
 
   useEffect(() => {
-    socket.on("receiveMessage", ({ senderId, receiverId: recId, message: newMessage }) => {
-      console.log("senderId:", senderId, ", receiverId:", recId, ", message:", newMessage);
+    const handleReceiveMessage = ({
+      senderId,
+      receiverId: receivedReceiverId,
+      message: newMessage,
+    }) => {
       if (
-        (senderId === user._id && recId === receiverId) ||
-        (senderId === receiverId && recId === user._id)
+        (newMessage.sender._id === user._id &&
+          receivedReceiverId === receiverId) ||
+        (newMessage.sender._id === receiverId &&
+          receivedReceiverId === user._id)
       ) {
-        console.log("Is this new message in UI:", newMessage);
         setMessages((prevMessages) => [...prevMessages, newMessage]);
-      } else {
-        console.log("This is newMessage.sender._id:", newMessage.sender._id);
-        console.log("This is user._id:", user._id);
-        console.log("This is receiverId:", receiverId);
       }
-    });
+    };
+
+    if (socketRef.current) {
+      socketRef.current.on("receiveMessage", handleReceiveMessage);
+    }
 
     return () => {
-      socket.off("receiveMessage");
+      if (socketRef.current) {
+        socketRef.current.off("receiveMessage", handleReceiveMessage);
+      }
     };
   }, [receiverId, user._id]);
 
@@ -103,7 +119,9 @@ const Chat = ({ user }) => {
         message,
       };
 
-      socket.emit("sendMessage", newMessage);
+      if (socketRef.current) {
+        socketRef.current.emit("sendMessage", newMessage);
+      }
       setMessage("");
     }
   };
@@ -128,7 +146,9 @@ const Chat = ({ user }) => {
         dataSource={messages}
         renderItem={(msg) => (
           <List.Item>
-            <strong>{msg.sender._id === user._id ? "You" : msg.sender.username}: </strong>
+            <strong>
+              {msg.sender._id === user._id ? "You" : msg.sender.username}:{" "}
+            </strong>
             {msg.message}
           </List.Item>
         )}
