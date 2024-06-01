@@ -127,7 +127,7 @@ const Chat = ({ user }) => {
   };
 
   return (
-    <div>
+    <div style={{ padding: 20 }}>
       <h2>Chat</h2>
       <Select
         placeholder="Select a user to chat"

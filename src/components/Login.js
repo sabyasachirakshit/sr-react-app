@@ -111,6 +111,7 @@ const Login = () => {
       }
     } catch (err) {
       console.error("Error:", err);
+      message.error(`Error:${err}`,3);
       // Handle error (e.g., display error message)
     } finally {
       msg(); // Set loading state to false when the request ends

@@ -1,18 +1,22 @@
+// src/components/Dashboard.js
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { Navigate, Link } from "react-router-dom";
-import { Modal, Button, message } from "antd";
+import { Navigate } from "react-router-dom";
+
+import Navbar from "./Navbar";
 import Todo from "./ToDo";
 import Chat from "./Chat";
+import Settings from "./Settings"; // Assume you have a Settings component
 
 const Container = styled.div`
-  padding: 20px;
+  padding: 0px;
 `;
 
 const Dashboard = () => {
   const [userData, setUserData] = useState(null);
   const [redirectToLogin, setRedirectToLogin] = useState(false);
-  const [isModalVisible, setIsModalVisible] = useState(false);
+
+  const [activeComponent, setActiveComponent] = useState("home");
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -48,49 +52,9 @@ const Dashboard = () => {
     fetchUserData();
   }, []);
 
-  const handleDeleteAccount = async () => {
-    const msg = message.loading("Deleting Account..");
-    const token = localStorage.getItem("token");
-    if (!token) {
-      setRedirectToLogin(true);
-      return;
-    }
-    try {
-      const response = await fetch("https://sr-express.onrender.com/api/user/delete", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+ 
 
-      if (response.ok) {
-        localStorage.removeItem("token");
-        message.success("Account deleted", 3);
-        setRedirectToLogin(true);
-      } else {
-        message.error("Failed to delete account", 3);
-      }
-    } catch (err) {
-      console.error("Error:", err);
-      message.error("Error deleting account. Please try again",3);
-    } finally {
-      msg();
-    }
-  };
-
-  const showModal = () => {
-    setIsModalVisible(true);
-  };
-
-  const handleOk = () => {
-    handleDeleteAccount();
-    setIsModalVisible(false);
-  };
-
-  const handleCancel = () => {
-    setIsModalVisible(false);
-  };
+  
 
   if (redirectToLogin) {
     return <Navigate to="/login" />;
@@ -102,32 +66,14 @@ const Dashboard = () => {
 
   return (
     <Container>
-      <h2>Welcome, {userData.username}</h2>
-      <p>First Name: {userData.firstname}</p>
-      <p>Last Name: {userData.lastname}</p>
-      <p>Phone Number: {userData.number}</p>
-      <Link to="/logout">
-        <button>Logout</button>
-      </Link>
+      <Navbar onNavClick={setActiveComponent} />
+      {activeComponent === "home" && <Settings userData={userData} />}
+      {activeComponent === "todo" && <Todo />}
+      {activeComponent === "chat" && <Chat user={userData} />}
+      {activeComponent === "settings" && <Settings userData={userData} />}
       
-      <Button type="danger" onClick={showModal}>
-        Delete Account
-      </Button>
-      <Modal
-        title="Delete Account"
-        visible={isModalVisible}
-        onOk={handleOk}
-        onCancel={handleCancel}
-        okText="Yes, Delete"
-        cancelText="No, Cancel"
-      >
-        <p>
-          Are you sure you want to delete your account? This action cannot be
-          undone.
-        </p>
-      </Modal>
-      <Todo />
-      <Chat user={userData} />
+      
+      
     </Container>
   );
 };
