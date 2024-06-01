@@ -32,6 +32,10 @@ const Todo = () => {
   };
 
   const handleAddTodo = async () => {
+    if (newTodo === "") {
+      message.error("Please name your task", 3);
+      return;
+    }
     const msg = message.loading("Adding task..", 3);
     const token = localStorage.getItem("token");
     try {
