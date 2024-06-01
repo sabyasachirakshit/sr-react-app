@@ -1,4 +1,3 @@
-// src/components/Dashboard.js
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { Navigate } from "react-router-dom";
@@ -16,7 +15,7 @@ const Dashboard = () => {
   const [userData, setUserData] = useState(null);
   const [redirectToLogin, setRedirectToLogin] = useState(false);
 
-  const [activeComponent, setActiveComponent] = useState("home");
+  const [activeComponent, setActiveComponent] = useState(localStorage.getItem("activeComponent"));
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -52,8 +51,17 @@ const Dashboard = () => {
     fetchUserData();
   }, []);
 
- 
 
+  useEffect(() => {
+    // Retrieve the activeComponent state from localStorage on component mount
+    const savedActiveComponent = localStorage.getItem("activeComponent");
+    if (savedActiveComponent) {
+      setActiveComponent(savedActiveComponent);
+    } else {
+      setActiveComponent("settings");
+      localStorage.setItem("activeComponent", "settings"); // Set localStorage here
+    }
+  }, []);
   
 
   if (redirectToLogin) {
@@ -71,9 +79,6 @@ const Dashboard = () => {
       {activeComponent === "todo" && <Todo />}
       {activeComponent === "chat" && <Chat user={userData} />}
       {activeComponent === "settings" && <Settings userData={userData} />}
-      
-      
-      
     </Container>
   );
 };

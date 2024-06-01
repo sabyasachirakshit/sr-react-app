@@ -80,11 +80,12 @@ const Navbar = ({ onNavClick }) => {
   const handleNavItemClick = (section) => {
     setIsOpen(false); // Close the dropdown menu when a navigation item is clicked
     onNavClick(section); // Trigger the navigation callback
+    localStorage.setItem("activeComponent", section);
   };
 
   return (
     <Nav>
-      <NavBrand onClick={() => onNavClick("home")}>TaskFlow</NavBrand>
+      <NavBrand onClick={() => handleNavItemClick("settings")}>TaskFlow</NavBrand>
       <Hamburger onClick={handleToggle} />
       <NavItems isOpen={isOpen}>
         <NavItem onClick={() => handleNavItemClick("todo")}>Todo</NavItem>
