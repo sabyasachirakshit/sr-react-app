@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Input, Button, List, Select } from "antd";
+import { Input, Button, List, Select, notification } from "antd";
 import io from "socket.io-client";
+import moment from "moment";  // Import moment.js for date formatting
 
 const { Option } = Select;
 
@@ -15,7 +16,7 @@ const Chat = ({ user }) => {
   useEffect(() => {
     // Initialize socket connection only once
     if (!socketRef.current) {
-      socketRef.current = io("https://sr-express.onrender.com/");
+      socketRef.current = io("https://sr-express.onrender.com");
     }
 
     socketRef.current.emit("register", user._id);
@@ -37,6 +38,10 @@ const Chat = ({ user }) => {
         setUsers(data);
       } catch (error) {
         console.error("Error fetching users:", error);
+        notification.error({
+          message: "Error",
+          description: "Failed to fetch users. Please try again later.",
+        });
       }
     };
 
@@ -73,6 +78,10 @@ const Chat = ({ user }) => {
       }
     } catch (error) {
       console.error("Error fetching messages:", error);
+      notification.error({
+        message: "Error",
+        description: "Failed to fetch messages. Please try again later.",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -96,7 +105,11 @@ const Chat = ({ user }) => {
         (newMessage.sender._id === receiverId &&
           receivedReceiverId === user._id)
       ) {
-        setMessages((prevMessages) => [...prevMessages, newMessage]);
+        setMessages((prevMessages) => 
+          prevMessages.map((msg) => 
+            msg.optimisticId && msg.message === newMessage.message ? newMessage : msg
+          )
+        );
       }
     };
 
@@ -113,16 +126,40 @@ const Chat = ({ user }) => {
 
   const handleSendMessage = async () => {
     if (message.trim()) {
+      const optimisticId = Date.now(); // Generate a temporary ID for the optimistic message
       const newMessage = {
-        senderId: user._id,
+        sender: { _id: user._id, username: "You" }, // Mocking the sender
         receiverId,
         message,
+        timestamp: new Date().toISOString(), // Add timestamp here
+        optimisticId,
       };
 
-      if (socketRef.current) {
-        socketRef.current.emit("sendMessage", newMessage);
-      }
+      // Optimistic UI update
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
       setMessage("");
+
+      try {
+        if (socketRef.current) {
+          socketRef.current.emit("sendMessage", {
+            senderId: user._id,
+            receiverId,
+            message,
+            optimisticId,
+          });
+        }
+      } catch (error) {
+        console.error("Error sending message:", error);
+        notification.error({
+          message: "Error",
+          description: "Failed to send message. Please try again later.",
+        });
+
+        // Rollback optimistic UI update
+        setMessages((prevMessages) =>
+          prevMessages.filter((msg) => msg.optimisticId !== optimisticId)
+        );
+      }
     }
   };
 
@@ -146,10 +183,11 @@ const Chat = ({ user }) => {
         dataSource={messages}
         renderItem={(msg) => (
           <List.Item>
-            <strong>
-              {msg.sender._id === user._id ? "You" : msg.sender.username}:{" "}
-            </strong>
-            {msg.message}
+            <div>
+              <strong>{msg.sender._id === user._id ? "You" : msg.sender.username}:</strong> {msg.message}
+              <br />
+              <span style={{ fontSize: "0.8em", color: "gray" }}>{moment(msg.timestamp).format('h:mm A D MMMM YYYY')}</span>
+            </div>
           </List.Item>
         )}
       />
